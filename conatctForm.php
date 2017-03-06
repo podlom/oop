@@ -6,76 +6,73 @@
  * Time: 18:59
  */
 
+class ContactForm
+{
+private $errorMessages = [];
+private $fileName = 'userComments.dat';
+private $uName;
+private $uMail;
+private $uComment;
+    
+public function setError($msg)
+{
+    array_push($this->errorMessages, $msg);
+    return $this;
+}
 
+/**
+ * @return mixed
+ */
+public function getUName()
+{
+    return $this->uName;
+}
 
-$errorMessages = [];
-$fileName = 'userComments.dat';
+/**
+ * @param mixed $uName
+ */
+public function setUName($uName)
+{
+    $this->uName = $uName;
+    return $this;
+}
 
+/**
+ * @return mixed
+ */
+public function getUMail()
+{
+    return $this->uMail;
+}
 
+/**
+ * @param mixed $uMail
+ */
+public function setUMail($uMail)
+{
+    $this->uMail = $uMail;
+    return $this;
+}
 
-class ContactForm {
+/**
+ * @return mixed
+ */
+public function getUComment()
+{
+    return $this->uComment;
+}
 
-    private $uName;
-    private $uMail;
-    private $uComment;
+/**
+ * @param mixed $uComment
+ */
+public function setUComment($uComment)
+{
+    $this->uComment = $uComment;
+    return $this;
+}
 
-    /**
-     * @return mixed
-     */
-    public function getUName()
-    {
-        return $this->uName;
-    }
-
-    /**
-     * @param mixed $uName
-     */
-    public function setUName($uName)
-    {
-        $this->uName = $uName;
-        return $this;
-
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getUMail()
-    {
-        return $this->uMail;
-    }
-
-    /**
-     * @param mixed $uMail
-     */
-    public function setUMail($uMail)
-    {
-        $this->uMail = $uMail;
-        return $this;
-
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getUComment()
-    {
-        return $this->uComment;
-    }
-
-    /**
-     * @param mixed $uComment
-     */
-    public function setUComment($uComment)
-    {
-        $this->uComment = $uComment;
-        return $this;
-
-    }
-
-public function setComments($data) {
-
-    global $fileName;
+public function setComments($data)
+{
     $prevComments = $this->getComments();
     if (($prevComments !== false) && (!empty($prevComments))) {
         $aPrevData = unserialize($prevComments);
@@ -86,80 +83,70 @@ public function setComments($data) {
     $aNewData = array_merge([$data], $aPrevData);
     echo '<p>Debug all comments: </p><pre>' . var_export($aNewData, 1) . '</pre>';
     $sData = serialize($aNewData);
-    file_put_contents($fileName, $sData);
-
-    }
- public function getComments() {
-     global $fileName;
-     if (file_exists($fileName)) {
-         return file_get_contents($fileName);
-
+    file_put_contents($this->fileName, $sData);
+}
+    
+public function getComments()
+{
+     if (file_exists($this->fileName)) {
+         return file_get_contents($this->fileName);
      }
-
+}
+    
+public function getErrorMessages()
+{
+    if (! empty($this->errorMessages)) {
+        foreach ($this->errorMessages as $error) {
+            echo '<p class="error">' . $error . '</p>';
+        }
     }
- public function getErrorMessages()
-    {
-        global $errorMessages;
-        if (! empty($errorMessages)) {
-            foreach ($errorMessages as $error) {
-                echo '<p class="error">' . $error . '</p>';
+}
+
+public function displayComments()
+{
+    $sComm = $this->getComments();
+    if ($sComm !== false) {
+        $aComm = unserialize($sComm);
+        if (!empty($aComm)) {
+            foreach ($aComm as $comm) {
+                echo '<div class="comment">' .
+                    '<p><span class="date">' . $comm['addedDate'] . '</span> by <a href="mailto:' . $comm['uMail'] . '">' . $comm['uName'] . '</a>:</p>' .
+                    '<div class="comment-text">' . $this->antimat($comm['uComment']) . '</div>'.
+                    '</div>';
             }
         }
     }
+}
 
-
-   public function displayComments()
-    {
-        $sComm =$this->getComments();
-        if ($sComm !== false) {
-            $aComm = unserialize($sComm);
-            if (!empty($aComm)) {
-                foreach ($aComm as $comm) {
-                    echo '<div class="comment">' .
-                        '<p><span class="date">' . $comm['addedDate'] . '</span> by <a href="mailto:' . $comm['uMail'] . '">' . $comm['uName'] . '</a>:</p>' .
-                        '<div class="comment-text">' . $this->antimat($comm['uComment']) . '</div>'.
-                        '</div>';
-                }
-            }
-        }
-    }
-
-
-  public  function antimat($str)
-    {
-        return str_replace([
+public function antimat($str)
+{
+    return str_replace([
             'Choko',
             'test',
         ], [
             'Ch***',
             't***',
         ], $str);
-    }
-
+}
+    
 }
 
-
-$comment = new ContactForm();
+$cf1 = new ContactForm();
 if ($_POST) {
     if (empty($_POST['uName'])) {
-        $errorMessages[] = 'Username is empty!';
+        $cf1->setError('Username is empty!');
     }
     if (empty($_POST['uMail'])) {
-        $errorMessages[] = 'User email is empty!';
+        $cf1->setError('User email is empty!');
     } elseif (!filter_var($_POST['uMail'], FILTER_VALIDATE_EMAIL)) {
-        $errorMessages[] = 'User email has wrong forat!';
+        $cf1->setError('User email has wrong forat!');
     }
     if (empty($_POST['uComment'])) {
-        $errorMessages[] = 'User comment is empty!';
+        $cf1->setError('User comment is empty!');
     }
-    if (empty($errorMessages)) {
-
-        $comment->setComments($_POST);
-
+    if (empty($cf1->getErrorMessages())) {
+        $cf1->setComments($_POST);
     }
-
-
-
 }
 
 
@@ -171,7 +158,7 @@ if ($_POST) {
 </head>
 <body>
 
-<?=$comment->getErrorMessages()?>
+<?=$cf1->getErrorMessages()?>
 
 <hr>
 
@@ -196,7 +183,7 @@ if ($_POST) {
 
 <hr>
 
-<?=$comment->displayComments()?>
+<?=$cf1->displayComments()?>
 
 </body>
 </html>
